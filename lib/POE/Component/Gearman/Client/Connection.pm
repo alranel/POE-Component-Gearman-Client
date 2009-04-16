@@ -82,6 +82,7 @@ sub close {
     my __PACKAGE__ $self = shift;
     $self->{state} = S_DISCONNECTED;
     $self->_requeue_all;
+    POE::Kernel->alarm_remove_all;
     POE::Kernel->post( $self->get_session, 'shutdown' );
 }
 

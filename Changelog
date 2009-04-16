@@ -1,3 +1,7 @@
+    - let's call POE::Kernel->alarm_remove_all() when disconnecting from job servers
+      because there might be delayed events set up by task callbacks (callbacks are
+      run within PoCo::TCP::Client sessions, so the user can't call alarm_remove_all)
+
 version 0.01 (2009-04-09)
 
     - new
