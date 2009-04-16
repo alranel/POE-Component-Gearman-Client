@@ -26,7 +26,7 @@ use List::Util qw(first);
 use POE::Component::Gearman::Client::Connection;
 use POE;
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 sub DEBUGGING () { 0 }
 
