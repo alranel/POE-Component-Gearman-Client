@@ -1,3 +1,5 @@
+version 0.03 (2009-04-17)
+
     - added a note in the docs about how to post events from task 
       callbacks
 
