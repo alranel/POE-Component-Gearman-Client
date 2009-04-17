@@ -268,7 +268,7 @@ the current job server list (by overriding the existing one if any).
 
 	$kernel->post('Gearman', 'set_job_servers', ['10.0.0.1']);
 
-Gearman is the alias name (see above about alias parameter), and the passed
+C<Gearman> is the alias name (see above about C<alias> parameter), and the passed
 argument is an ARRAYREF containing the server definitions in IP:port syntax.
 
 =item C<add_task>
@@ -278,8 +278,37 @@ task.
 
 	$kernel->post('Gearman', 'add_task', $task);
 
-Gearman is the alias name (see above about alias parameter), and C<$task> is a 
+C<Gearman> is the alias name (see above about C<alias> parameter), and C<$task> is a 
 L<Gearman::Task> object.
+
+B<Warning:> you can't call POE::Kernel's methods like C<yield()>, C<delay()> etc.
+from within a task callback, because callbacks will be executed within 
+POE::Component::Gearman::Client's session instead of yours. Thus, the only methods
+you can call are C<post()> and C<call()> because they let
+you specify the destination session. See example:
+
+    # WRONG
+    sub submit_task {
+        my $kernel = $_[KERNEL];
+        my $cb = sub {
+            $kernel->delay('submit_task', 60);  # this won't be called within your session!
+        };
+        my $task = Gearman::Task->new('do_task', \'', { on_complete => $cb });
+        POE::Kernel->post('Gearman' => 'add_task', $task);
+    }
+    
+    # CORRECT
+    sub submit_task {
+        my ($kernel, $session) = @_[KERNEL, SESSION];
+        my $cb = sub {
+            $kernel->post($session => 'task_done');
+        };
+        my $task = Gearman::Task->new('do_task', \'', { on_complete => $cb });
+        POE::Kernel->post('Gearman' => 'add_task', $task);
+    }
+    sub task_done {
+        $_[KERNEL]->delay('submit_task', 60);
+    }
 
 =item C<disconnect_all>
 
@@ -289,7 +318,7 @@ want so.
 
 	$kernel->post('Gearman', 'disconnect_all');
 
-Gearman is the alias name (see above about alias parameter).
+C<Gearman> is the alias name (see above about C<alias> parameter).
 
 =back
 
